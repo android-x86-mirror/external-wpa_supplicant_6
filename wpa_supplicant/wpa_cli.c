@@ -1882,7 +1882,7 @@ static char * wpa_cli_get_default_ifname(void)
 	if (!dir) {
 #ifdef ANDROID
 		char ifprop[PROPERTY_VALUE_MAX];
-		if (property_get("wifi.interface", ifprop, NULL) != 0) {
+		if (property_get("wlan.interface", ifprop, NULL) != 0) {
 			ifname = os_strdup(ifprop);
 			printf("Using interface '%s'\n", ifname);
 			return ifname;
