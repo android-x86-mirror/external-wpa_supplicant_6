@@ -663,6 +663,9 @@ int wpa_driver_awext_set_wpa(void *priv, int enabled)
 }
 
 #ifdef ANDROID
+#define RSSI_CMD			"RSSI"
+#define LINKSPEED_CMD			"LINKSPEED"
+
 static int wpa_driver_priv_driver_cmd(void *priv, char *cmd, char *buf, size_t buf_len)
 {
 
@@ -872,6 +875,32 @@ static int wpa_driver_priv_driver_cmd(void *priv, char *cmd, char *buf, size_t b
 	}
 	return (ret);
 }
+
+static int wpa_driver_awext_signal_poll(void *priv, struct wpa_signal_info *si)
+{
+	char buf[MAX_DRV_CMD_SIZE];
+	struct wpa_driver_awext_data *drv = priv;
+	char *prssi;
+	int res;
+
+	os_memset(si, 0, sizeof(*si));
+	res = wpa_driver_priv_driver_cmd(priv, RSSI_CMD, buf, sizeof(buf));
+	/* Answer: SSID rssi -Val */
+	if (res < 0)
+		return res;
+	prssi = strcasestr(buf, RSSI_CMD);
+	if (!prssi)
+		return -1;
+	si->current_signal = atoi(prssi + strlen(RSSI_CMD) + 1);
+
+	res = wpa_driver_priv_driver_cmd(priv, LINKSPEED_CMD, buf, sizeof(buf));
+	/* Answer: LinkSpeed Val */
+	if (res < 0)
+		return res;
+	si->current_txrate = atoi(buf + strlen(LINKSPEED_CMD) + 1) * 1000;
+
+	return 0;
+}
 #endif
 
 const struct wpa_driver_ops wpa_driver_awext_ops = {
@@ -908,6 +937,7 @@ const struct wpa_driver_ops wpa_driver_awext_ops = {
 	.mlme_remove_sta = wpa_driver_awext_mlme_remove_sta,
 #endif /* CONFIG_CLIENT_MLME */
 #ifdef ANDROID
+	.signal_poll = wpa_driver_awext_signal_poll,
 	.driver_cmd = wpa_driver_priv_driver_cmd,
 #endif
 };

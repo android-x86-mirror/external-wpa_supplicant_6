@@ -769,6 +769,14 @@ static inline int wpa_drv_set_probe_req_ie(struct wpa_supplicant *wpa_s,
 }
 
 #ifdef ANDROID
+static inline int wpa_drv_signal_poll(struct wpa_supplicant *wpa_s,
+				      struct wpa_signal_info *si)
+{
+	if (wpa_s->driver->signal_poll)
+		return wpa_s->driver->signal_poll(wpa_s->drv_priv, si);
+	return -1;
+}
+
 static inline int wpa_drv_driver_cmd(struct wpa_supplicant *wpa_s,
 					  char *cmd, char *buf, size_t buf_len)
 {
